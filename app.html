@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>AI-ассистент для прогнозирования рисков оттока персонала с системой рекомендаций по их удержанию</title>
+    <style>
+        .employee-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .pagination {
+            margin: 20px 0;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+        }
+        .current-page {
+            font-weight: bold;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Форма регистрации -->
+    {% if not registered %}
+    <h1>Добро пожаловать!</h1>
+    <h3>Пожалуйста, зарегистрируйтесь, чтобы продолжить.</h3>
+    <p>Для начала работы необходимо зарегистрироваться.</p>
+
+    <form method="POST" action="/api/users/register">
+        <div>
+            <label>Введите ваш логин:</label><br>
+            <input type="text" name="username" value="{{ username|default('') }}" required>
+        </div>
+
+        <div>
+            <label>Введите ваш email:</label><br>
+            <input type="email" name="email" value="{{ email|default('') }}" required maxlength="100">
+        </div>
+
+        <div>
+            <label>Введите пароль (минимум 8 символов):</label><br>
+            <input type="password" name="password" minlength="8" required maxlength="200">
+        </div>
+
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <!-- Форма входа -->
+    <h3>Уже есть аккаунт?</h3>
+    <form method="POST" action="/api/users/login">
+        <div>
+            <label>Email:</label><br>
+            <input type="email" name="username" required>
+        </div>
+
+        <div>
+            <label>Пароль:</label><br>
+            <input type="password" name="password" required>
+        </div>
+
+        <button type="submit">Войти</button>
+    </form>
+
+    <!-- После успешной регистрации/входа -->
+    {% elif registered and not prediction_made %}
+    <h1>Добро пожаловать, {{ username }}!</h1>
+
+    <div>
+        <h4>Ваш баланс: {{ balance|default(0)|float }} </h4>
+    </div>
+
+    <h4>Выберите действие:</h4>
+
+    <div>
+        <form method="POST" action="/balance">
+            <label>Сумма пополнения:</label><br>
+            <input type="number" name="amount" value="10" min="1" step="0.01">
+            <button type="submit">Пополнить баланс</button>
+        </form>
+
+        <form method="POST" action="/prediction">
+            <h4>Рекомендации по удержанию сотрудников:</h4>
+            <button type="submit">Проанализировать (-10)</button>
+        </form>
+    </div>
+
+    <!-- Результат предсказания -->
+    {% elif prediction_made %}
+    <h1>Результат анализа</h1>
+
+    <div id="results-info">
+        <p><strong>Найдено сотрудников с риском увольнения:</strong> {{ total_employees }}</p>
+        <p><strong>Текущий баланс:</strong> {{ balance|float }}</p>
+        {% if success_message %}
+            <p><strong>{{ success_message }}</strong></p>
+        {% endif %}
+    </div>
+
+    {% if prediction_result and prediction_result|length > 0 %}
+        {% for employee in prediction_result %}
+            <div>
+
+                <h3>Сотрудник {{ loop.index }} (ID: {{ employee.employee_id }})</h3>
+
+                <!-- Вероятность увольнения -->
+                <p><strong>Вероятность увольнения:</strong>
+                    <span>
+                        {{ employee.probability_percent }}
+                    </span>
+                </p>
+
+                <!-- Факторы риска -->
+                {% if employee.risk_factors and employee.risk_factors|length > 0 %}
+                    <p><strong>Факторы риска:</strong></p>
+                    <ul>
+                        {% for factor in employee.risk_factors %}
+                            <li>{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- Рекомендации -->
+                {% if employee.recommendations and employee.recommendations|length > 0 %}
+                    <p><strong>Рекомендации:</strong></p>
+                    <ol>
+                        {% for rec in employee.recommendations %}
+                            <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+
+                <!-- Оценка рекомендаций -->
+                {% if employee.evaluation_score %}
+                    <p><strong>Оценка рекомендаций:</strong> {{ employee.evaluation_score }}/10</p>
+                {% endif %}
+
+                <!-- Требует проверки HR -->
+                {% if employee.requires_hr_review %}
+                    <div>
+                        <strong>Требует проверки HR-специалиста</strong>
+                    </div>
+                {% endif %}
+
+                <!-- Сообщения -->
+                {% if employee.messages and employee.messages|length > 0 %}
+                    <div>
+                        {% for message in employee.messages %}
+                            <div>{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>Нет данных для отображения.</p>
+    {% endif %}
+
+
+    <div>
+        <h4>Текущий баланс: {{ balance|float }}</h4>
+    </div>
+
+    <div>
+        <form method="GET" action="/">
+            <button type="submit">Вернуться в меню</button>
+        </form>
+    </div>
+    {% endif %}
+
+
+<!-- Выход для зарегистрированных пользователей -->
+{% if registered %}
+<div>
+    <form method="POST" action="/logout">
+        <button type="submit">Выйти</button>
+    </form>
+</div>
+{% endif %}
+
+</body>
+</html>
