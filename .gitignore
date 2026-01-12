@@ -1,0 +1,16 @@
+/__init__.py
+/.env
+/appp/database/__init__.py
+/appp/models/__init__.py
+/appp/services/__init__.py
+/appp/test/__init__.py
+/appp/__init__.py
+/data/__init__.py
+/saved_models/__init__.py
+/appp/test/_pycache_
+ __pycache__/
+ appp/__pycache__/
+ appp/database/__pycache__/
+ appp/models/__pycache__/
+ appp/services/__pycache__/
+ catboost_info/

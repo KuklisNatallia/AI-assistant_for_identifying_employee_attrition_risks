@@ -1,0 +1,46 @@
+# version: '3.8'
+
+services:
+  app:
+    build: ./appp/
+    image: hr_analytics
+    container_name: hr_analytics
+    env_file:
+      - .env # файл с переменными окружения
+    volumes:
+      - ./appp:/appp  # исходный файл приложения
+      - ./data:/appp/data # для csv файлов
+      - ./saved_models:/appp/saved_models # для сохранения модели
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    restart: unless-stopped # on-failure
+    networks:
+      - backend
+
+  database:
+    image: mysql:8.0
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    restart: on-failure
+    networks:
+      - backend
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+    backend:
+    frontend:
